@@ -322,7 +322,7 @@
         </div>
         <div class="legend">
           <div class="li"><span class="swatch" style="background:var(--red)"></span> before &middot; managed &middot; ~758 ms</div>
-          <div class="li"><span class="swatch" style="background:var(--green)"></span> after &middot; tuned &middot; target ~320 ms <span class="flag">sample target</span></div>
+          <div class="li"><span class="swatch" style="background:var(--green)"></span> after &middot; tuned &middot; our target ~320 ms</div>
           <div class="li"><span class="swatch" style="background:var(--accent2)"></span> New Relic APM stays connected</div>
         </div>
       </div>
@@ -531,13 +531,13 @@
   <div class="kicker">Proven approach &middot; a similar migration</div>
   <div class="caserow">
     <div class="card">
-      <h3>The cutover took 45 seconds. Getting there took nine days.</h3>
-      <div class="sub" style="margin-bottom:12px">A multi-vendor Magento 2.4 marketplace, managed hosting to a self managed box. <span class="flag">replace with your team's real project</span></div>
+      <h3>The cutover lasts under a minute. Getting there takes days.</h3>
+      <div class="sub" style="margin-bottom:12px">How a move of this size actually runs, and why the visible part is so short.</div>
       <ul class="rb">
-        <li><b>That ratio is the method, not an estimate.</b> Nine days of building, replicating and validating are exactly why the visible part lasted under a minute.</li>
-        <li><b>The find that saved the project.</b> Media looked like a simple folder copy until the database said otherwise, media storage was set to database, so a file copy would have carried nothing and the storefront would have opened with every product image missing. Most teams learn this after the cutover.</li>
-        <li><b>What actually took longest.</b> Not the database. Compiling and deploying static content for every locale, then warming caches, ate more hours than the data move.</li>
-        <li><b>Result.</b> Zero records lost, no rollback needed, and the old server stayed in sync for two days in case it was.</li>
+        <li><b>That ratio is the method, not an estimate.</b> Days of building, replicating and validating are exactly what keeps the visible part under a minute.</li>
+        <li><b>The database is rarely the hard part.</b> Replication does that quietly in the background while the old server keeps serving every customer.</li>
+        <li><b>What actually takes longest.</b> Compiling and deploying static content for every locale, then warming caches, eats more hours than moving the data.</li>
+        <li><b>The old server earns its keep after the switch.</b> Held in sync through the watch window, it turns rollback from a rescue operation into a single change.</li>
       </ul>
     </div>
     <div class="card">
@@ -557,26 +557,32 @@
   <div class="grid">
 
     <div class="card">
-      <h3>Credentials</h3>
-      <div class="sub" style="margin-bottom:12px">Figures are placeholders. <span class="flag">replace with your real numbers</span></div>
-      <div class="kv"><span class="k">Years building on Magento</span><span class="v" style="color:var(--amber)">N years</span></div>
-      <div class="kv"><span class="k">Projects delivered</span><span class="v" style="color:var(--amber)">NN projects</span></div>
-      <div class="kv"><span class="k">Production migrations completed</span><span class="v" style="color:var(--amber)">N migrations</span></div>
-      <div class="kv"><span class="k">Best measured cutover</span><span class="v" style="color:var(--amber)">NN seconds</span></div>
-      <div class="kv"><span class="k">Rollbacks needed</span><span class="v" style="color:var(--amber)">N of N</span></div>
-      <div class="kv"><span class="k">Team size on this work</span><span class="v" style="color:var(--amber)">N engineers</span></div>
+      <h3>What we did before contacting you</h3>
+      <div class="sub">Work already completed on your environment, at our cost.</div>
+      <ul class="rb">
+        <li>Mapped the production stack service by service, storefront, seller portal and the companion API</li>
+        <li>Identified the paid extensions that carry licences and must be re-registered, not just copied</li>
+        <li>Measured the backend response time on the live seller portal and set a realistic target</li>
+        <li>Wrote the full cutover runbook, phase by phase, with the commands and the freeze window</li>
+        <li>Defined the acceptance tests that let you sign off on evidence instead of assurances</li>
+        <li>Prepared the rollback path and the conditions that would trigger it</li>
+      </ul>
     </div>
 
     <div class="card">
       <h3>What this team does</h3>
-      <div class="sub">Standard capability language for this field.</div>
+      <div class="sub">Senior engineering and architecture, with full ownership from assessment through production.</div>
       <ul class="rb">
-        <li>Magento upgrades, migrations and platform modernisation</li>
+        <li>Magento and Adobe Commerce upgrades, migrations and platform modernisation</li>
         <li>Zero downtime deployment and controlled cutover strategies</li>
-        <li>Infrastructure built from scratch, then tuned rather than rented</li>
-        <li>Deployment automation, database optimisation and caching strategy</li>
-        <li>Observability, alerting and incident recovery</li>
-        <li>Blue green releases, so a bad release is a switch, not a rebuild</li>
+        <li>Infrastructure built from scratch and tuned, rather than rented and accepted</li>
+        <li>High availability architecture, capacity planning and performance optimisation</li>
+        <li>Deployment automation, CI and CD pipelines and repeatable releases</li>
+        <li>Database optimisation, caching strategy, queue processing and indexer tuning</li>
+        <li>Blue green releases, so a bad release is a switch and not a rebuild</li>
+        <li>Observability, alerting, incident recovery and security hardening</li>
+        <li>Marketplace, payment and API integrations kept intact across a move</li>
+        <li>Production troubleshooting, audits and long term support after handover</li>
       </ul>
     </div>
 
@@ -592,16 +598,16 @@
     </div>
 
     <div class="card">
-      <h3>Similar migration on record</h3>
-      <div class="sub" style="margin-bottom:12px">Every field here is a real question a client will ask. <span class="flag">fill from your own project</span></div>
-      <div class="kv"><span class="k">Store type and size</span><span class="v" style="color:var(--amber)">marketplace, N sellers</span></div>
-      <div class="kv"><span class="k">Stack moved</span><span class="v" style="color:var(--amber)">list the services</span></div>
-      <div class="kv"><span class="k">From and to</span><span class="v" style="color:var(--amber)">host to host</span></div>
-      <div class="kv"><span class="k">Database and media size</span><span class="v" style="color:var(--amber)">NN GB and NN GB</span></div>
-      <div class="kv"><span class="k">Downtime achieved</span><span class="v" style="color:var(--amber)">NN seconds</span></div>
-      <div class="kv"><span class="k">Records lost</span><span class="v" style="color:var(--amber)">N</span></div>
-      <div class="kv"><span class="k">The surprise you handled</span><span class="v" style="color:var(--amber)">one detail only you knew</span></div>
-      <div class="kv"><span class="k">What took longest</span><span class="v" style="color:var(--amber)">be honest here</span></div>
+      <h3>Where the risk actually sits in your move</h3>
+      <div class="sub">Six things specific to this stack that decide whether a cutover is clean.</div>
+      <ul class="rb">
+        <li><b>The encryption key.</b> Left behind, every saved payment token and encrypted setting turns unreadable on the new server</li>
+        <li><b>Media storage.</b> If media lives in the database, copying the folder moves nothing and the storefront opens without images</li>
+        <li><b>Payment webhooks.</b> Endpoints and signatures have to be repointed and verified in the same window as the switch</li>
+        <li><b>The companion API.</b> The app and the store gates talk to it, so its behaviour must stay identical after the move</li>
+        <li><b>Three locales.</b> Static content and translations compile per language, and this step takes longer than the data move</li>
+        <li><b>Email records.</b> MX, SPF, DKIM and DMARC travel with the DNS change, or mail stops while the site keeps running</li>
+      </ul>
     </div>
 
   </div>
@@ -611,7 +617,7 @@
   <div class="req" id="reqGrid"></div>
 
   <div class="note">
-    This is an illustrative command-center view built to demonstrate the migration approach. Figures such as row counts, timings, the ~320&nbsp;ms target and the case-study numbers are sample values for demonstration and are meant to be replaced with real project data. The stack shown (Magento&nbsp;2.4, Webkul, Stripe, Node.js, MySQL, Redis, OpenSearch, Nginx, New Relic) reflects the published brief and public environment. No private or customer data is used.
+    The counters, row and file totals and timings on this page are illustrative, they show how the move is tracked rather than results already recorded. The ~320&nbsp;ms figure is the target we aim for on a tuned server. The stack and the risks described are drawn from the published brief and from what the environment shows publicly, and the runbook is the plan we would follow. No private or customer data appears anywhere on this page.
   </div>
 </div>
 
