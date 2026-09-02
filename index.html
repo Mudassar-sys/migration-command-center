@@ -232,6 +232,9 @@
       <div class="kv"><span class="k">Companion app</span><span class="v">Node.js API</span></div>
       <div class="kv"><span class="k">Search</span><span class="v">OpenSearch</span></div>
       <div class="kv"><span class="k">Cache / sessions</span><span class="v">Redis</span></div>
+      <div class="kv"><span class="k">Paid extensions</span><span class="v">Landofcoder HelpDesk, WeltPixel</span></div>
+      <div class="kv"><span class="k">Storefront languages</span><span class="v">German, English, Italian</span></div>
+      <div class="kv"><span class="k">Analytics</span><span class="v">Superset</span></div>
       <div class="kv"><span class="k">Monitoring</span><span class="v">New Relic (EU)</span></div>
       <div class="kv"><span class="k">Current host</span><span class="v"><span class="tag a">managed</span></span></div>
       <div class="kv"><span class="k">Backend response now</span><span class="v" id="assessTtfb">~758 ms</span></div>
@@ -250,6 +253,8 @@
         <div class="s" data-k="opensearch"><span class="led"></span><span class="l">OpenSearch</span><span class="stt">idle</span></div>
         <div class="s" data-k="ssl"><span class="led"></span><span class="l">SSL / vhosts</span><span class="stt">idle</span></div>
         <div class="s" data-k="stripe"><span class="led"></span><span class="l">Stripe webhooks</span><span class="stt">idle</span></div>
+        <div class="s" data-k="ext"><span class="led"></span><span class="l">Paid extensions relicensed</span><span class="stt">idle</span></div>
+        <div class="s" data-k="lang"><span class="led"></span><span class="l">Three store languages</span><span class="stt">idle</span></div>
       </div>
     </div>
 
@@ -278,6 +283,8 @@
         <div class="s" data-k="t4"><span class="led"></span><span class="l">OpenSearch reindex</span><span class="stt">queued</span></div>
         <div class="s" data-k="t5"><span class="led"></span><span class="l">Node API health</span><span class="stt">queued</span></div>
         <div class="s" data-k="t6"><span class="led"></span><span class="l">Checkout end-to-end</span><span class="stt">queued</span></div>
+        <div class="s" data-k="t7"><span class="led"></span><span class="l">HelpDesk tickets intact</span><span class="stt">queued</span></div>
+        <div class="s" data-k="t8"><span class="led"></span><span class="l">Superset still reporting</span><span class="stt">queued</span></div>
       </div>
     </div>
 
@@ -374,6 +381,10 @@
           <text class="lbl" x="725" y="116" text-anchor="middle">Redis</text>
           <rect class="box" x="650" y="152" width="150" height="50" rx="10"/>
           <text class="lbl" x="725" y="182" text-anchor="middle">OpenSearch</text>
+          <rect class="box" x="850" y="152" width="110" height="50" rx="10"/>
+          <text class="lbl" x="905" y="172" text-anchor="middle">Superset</text>
+          <text class="sm" x="905" y="190" text-anchor="middle">analytics</text>
+          <path class="flowline" d="M800 45 C826 45 826 177 850 177"/>
           <!-- ops -->
           <rect class="box acc" x="620" y="218" width="340" height="56" rx="10"/>
           <text class="lbl" x="790" y="242" text-anchor="middle">New Relic · CI/CD deploy · nightly backups</text>
@@ -524,7 +535,7 @@
     // Phase 1 - Build
     setStep(0,'active');
     log('Phase 1 — building new server (Ubuntu, tuned)','in');
-    var svcKeys=['nginx','php','node','mysql','redis','opensearch','ssl','stripe'];
+    var svcKeys=['nginx','php','node','mysql','redis','opensearch','ssl','stripe','ext','lang'];
     svcKeys.forEach(function(k,idx){
       after(300+idx*260,function(){ setLed('svc',k,'mid','installing'); });
       after(300+idx*260+180,function(){ setLed('svc',k,'on','ready'); });
@@ -556,7 +567,7 @@
     after(5100,function(){
       setStep(2,'active');
       log('Phase 3 — running validation on new box (old box still live)','in');
-      ['t1','t2','t3','t4','t5','t6'].forEach(function(k,idx){
+      ['t1','t2','t3','t4','t5','t6','t7','t8'].forEach(function(k,idx){
         after(idx*300,function(){ setLed('tests',k,'mid','running'); });
         after(idx*300+220,function(){ setLed('tests',k,'on','pass'); });
       });
@@ -676,8 +687,8 @@
     el('downtime').textContent='0.0s'; el('downtime').className='num'; el('dtNote').textContent='not started';
     el('storeState').textContent='OPEN'; el('storeState').style.color='var(--green)'; el('storeDot').className='dot';
     PHASES.forEach(function(_,i){ setStep(i,''); });
-    ['nginx','php','node','mysql','redis','opensearch','ssl','stripe'].forEach(function(k){ setLed('svc',k,'','idle'); });
-    ['t1','t2','t3','t4','t5','t6'].forEach(function(k){ setLed('tests',k,'','queued'); });
+    ['nginx','php','node','mysql','redis','opensearch','ssl','stripe','ext','lang'].forEach(function(k){ setLed('svc',k,'','idle'); });
+    ['t1','t2','t3','t4','t5','t6','t7','t8'].forEach(function(k){ setLed('tests',k,'','queued'); });
     el('flow').classList.remove('run');
     el('srcRows').textContent='1,284,900 rows'; el('tgtRows').textContent='0 rows';
     el('lag').innerHTML='&mdash;'; el('media').innerHTML='&mdash;';
