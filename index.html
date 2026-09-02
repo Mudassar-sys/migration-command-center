@@ -1,0 +1,697 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Zero-Downtime Migration Command Center</title>
+<style>
+  :root{
+    --bg:#060814;
+    --bg2:#0a0d1e;
+    --panel:#141a33;
+    --panel2:#0f1428;
+    --line:#273059;
+    --line2:#37427d;
+    --ink:#eef2fb;
+    --muted:#a2adcf;
+    --faint:#6d7aa6;
+    --accent:#35e3d1;
+    --accent2:#8b7dff;
+    --green:#2fe0a0;
+    --greenb:#08311f;
+    --red:#ff5468;
+    --redb:#2f0f17;
+    --amber:#ffb43a;
+    --amberb:#2c200d;
+    --radius:16px;
+    --mono:ui-monospace,"SF Mono",SFMono-Regular,Menlo,"Cascadia Mono",Consolas,monospace;
+    --sans:-apple-system,BlinkMacSystemFont,"Segoe UI Variable","Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    --display:-apple-system,BlinkMacSystemFont,"Segoe UI Variable","Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{
+    background:
+      radial-gradient(1300px 640px at 88% -12%, rgba(139,125,255,.16), transparent 60%),
+      radial-gradient(1000px 560px at -12% 8%, rgba(53,227,209,.12), transparent 55%),
+      radial-gradient(900px 900px at 50% 120%, rgba(47,224,160,.06), transparent 60%),
+      var(--bg);
+    color:var(--ink);
+    font-family:var(--sans);
+    font-size:15px;
+    line-height:1.5;
+    -webkit-font-smoothing:antialiased;
+  }
+  a{color:var(--accent2)}
+  .wrap{max-width:1180px;margin:0 auto;padding:22px 20px 80px}
+
+  /* top bar */
+  .top{
+    position:sticky;top:0;z-index:50;
+    backdrop-filter:blur(10px);
+    background:linear-gradient(180deg, rgba(7,11,18,.92), rgba(7,11,18,.72));
+    border-bottom:1px solid var(--line);
+  }
+  .top .row{max-width:1180px;margin:0 auto;padding:12px 20px;display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+  .brand{display:flex;flex-direction:column;gap:2px;margin-right:auto}
+  .brand .t{font-family:var(--display);font-weight:800;letter-spacing:.2px;font-size:16.5px;background:linear-gradient(92deg,var(--ink) 30%,var(--accent) 75%,var(--accent2));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+  .brand .s{color:var(--muted);font-size:12.5px}
+  .pill{display:inline-flex;align-items:center;gap:8px;padding:6px 11px;border-radius:999px;border:1px solid var(--line2);background:var(--panel);font-size:12.5px;color:var(--muted)}
+  .dot{width:8px;height:8px;border-radius:50%;background:var(--green);box-shadow:0 0 0 0 rgba(34,197,94,.6);animation:pulse 2s infinite}
+  .dot.red{background:var(--red);animation:pulseR 1.4s infinite}
+  .dot.amber{background:var(--amber)}
+  @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(34,197,94,.5)}70%{box-shadow:0 0 0 7px rgba(34,197,94,0)}100%{box-shadow:0 0 0 0 rgba(34,197,94,0)}}
+  @keyframes pulseR{0%{box-shadow:0 0 0 0 rgba(239,68,68,.5)}70%{box-shadow:0 0 0 7px rgba(239,68,68,0)}100%{box-shadow:0 0 0 0 rgba(239,68,68,0)}}
+  .btns{display:flex;gap:9px;flex-wrap:wrap}
+  button{font-family:var(--sans);cursor:pointer;border-radius:11px;border:1px solid var(--line2);background:var(--panel);color:var(--ink);padding:9px 14px;font-size:13.5px;font-weight:600;transition:.15s}
+  button:hover{border-color:var(--accent);transform:translateY(-1px)}
+  button:disabled{opacity:.45;cursor:not-allowed;transform:none;border-color:var(--line2)}
+  .b-primary{background:linear-gradient(120deg,#35e3d1,#28c6d6 55%,#7aa0ff);color:#04201f;border:none;box-shadow:0 8px 24px -6px rgba(53,227,209,.45),0 2px 0 rgba(255,255,255,.15) inset;font-weight:700}
+  .b-primary:hover{box-shadow:0 12px 30px -6px rgba(139,125,255,.5),0 2px 0 rgba(255,255,255,.2) inset}
+  .b-danger{background:var(--redb);border-color:#5a2130;color:#ffb4be}
+  .b-ghost{background:transparent}
+
+  /* hero strip */
+  .hero{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:20px 0}
+  @media(max-width:840px){.hero{grid-template-columns:1fr}}
+  .card{position:relative;background:linear-gradient(165deg,var(--panel),var(--panel2));border:1px solid var(--line);border-radius:var(--radius);padding:18px;box-shadow:0 1px 0 rgba(255,255,255,.04) inset,0 24px 50px -30px rgba(0,0,0,.9)}
+  .card::before{content:"";position:absolute;inset:0;border-radius:var(--radius);padding:1px;background:linear-gradient(160deg,rgba(139,125,255,.28),rgba(53,227,209,.14) 35%,transparent 60%);-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;pointer-events:none;opacity:.7}
+  .card h3{margin:0 0 4px;font-size:13px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);font-weight:700}
+  .card .sub{color:var(--faint);font-size:12.5px;margin-bottom:12px}
+
+  .store{display:flex;align-items:center;gap:14px}
+  .store .big{font-family:var(--display);font-size:30px;font-weight:800;letter-spacing:.3px}
+  .store .lbl{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.12em}
+  .downtime .num{font-family:var(--mono);font-size:34px;font-weight:700;color:var(--green)}
+  .downtime .num.warn{color:var(--amber)}
+  .downtime .num.bad{color:var(--red)}
+
+  /* phase stepper */
+  .stepper{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin:6px 0 22px}
+  @media(max-width:840px){.stepper{grid-template-columns:repeat(2,1fr)}}
+  .step{position:relative;border:1px solid var(--line);border-radius:13px;background:var(--panel2);padding:12px 12px 12px 40px;overflow:hidden}
+  .step .n{position:absolute;left:12px;top:12px;width:20px;height:20px;border-radius:50%;border:1px solid var(--line2);display:grid;place-items:center;font-size:11px;color:var(--muted);font-family:var(--mono)}
+  .step .k{font-size:13.5px;font-weight:700}
+  .step .st{font-size:11.5px;color:var(--faint);margin-top:2px}
+  .step.active{border-color:var(--accent);box-shadow:0 0 0 1px rgba(53,227,209,.35) inset,0 10px 26px -12px rgba(53,227,209,.55)}
+  .step.active .n{border-color:var(--accent);color:var(--accent)}
+  .step.done{border-color:#1f5138}
+  .step.done .n{background:var(--green);border-color:var(--green);color:#04211c}
+  .step.done .st{color:var(--green)}
+  .step .bar{position:absolute;left:0;bottom:0;height:3px;width:0;background:linear-gradient(90deg,var(--accent),var(--accent2));transition:width .3s}
+
+  /* main grid */
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  @media(max-width:840px){.grid{grid-template-columns:1fr}}
+  .span2{grid-column:1 / -1}
+
+  .kv{display:flex;justify-content:space-between;gap:10px;padding:8px 0;border-bottom:1px dashed var(--line);font-size:13.5px}
+  .kv:last-child{border-bottom:none}
+  .kv .k{color:var(--muted)}
+  .kv .v{font-family:var(--mono);color:var(--ink)}
+  .tag{display:inline-block;padding:2px 8px;border-radius:7px;font-size:11.5px;font-family:var(--mono);border:1px solid var(--line2);color:var(--muted)}
+  .tag.g{color:#8ff0c0;border-color:#1f5138;background:var(--greenb)}
+  .tag.a{color:#ffd68a;border-color:#5a4620;background:var(--amberb)}
+  .tag.r{color:#ffb4be;border-color:#5a2130;background:var(--redb)}
+
+  /* service grid */
+  .svc{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+  .svc .s{display:flex;align-items:center;gap:9px;border:1px solid var(--line);border-radius:11px;padding:9px 11px;background:var(--panel2);font-size:13px}
+  .svc .s .l{margin-right:auto}
+  .led{width:9px;height:9px;border-radius:50%;background:#3a4a63;transition:.3s}
+  .led.on{background:var(--green);box-shadow:0 0 8px rgba(34,197,94,.7)}
+  .led.mid{background:var(--amber);box-shadow:0 0 8px rgba(245,158,11,.6)}
+  .led.off{background:var(--red)}
+  .svc .s .stt{font-family:var(--mono);font-size:11px;color:var(--faint)}
+
+  /* gauge */
+  .gauge{display:flex;align-items:center;gap:18px}
+  .gwrap{position:relative;width:132px;height:132px;flex:none}
+  .gnum{position:absolute;inset:0;display:grid;place-items:center;text-align:center}
+  .gnum b{font-family:var(--mono);font-size:24px;display:block}
+  .gnum span{font-size:11px;color:var(--muted)}
+  .legend{font-size:12.5px;color:var(--muted)}
+  .legend .li{display:flex;align-items:center;gap:8px;margin:5px 0}
+  .swatch{width:11px;height:11px;border-radius:3px}
+
+  /* replication */
+  .repl{display:flex;align-items:center;gap:10px;margin-top:6px}
+  .node{flex:1;border:1px solid var(--line2);border-radius:11px;padding:10px;text-align:center;background:var(--panel2)}
+  .node .nm{font-size:12px;color:var(--muted)}
+  .node .db{font-family:var(--mono);font-size:13px;margin-top:3px}
+  .flow{flex:none;width:70px;height:26px;position:relative;overflow:hidden}
+  .flow i{position:absolute;top:11px;width:6px;height:6px;border-radius:50%;background:var(--accent);opacity:0}
+  .flow.run i{animation:move 1.1s linear infinite}
+  @keyframes move{0%{left:-8px;opacity:0}15%{opacity:1}85%{opacity:1}100%{left:72px;opacity:0}}
+
+  .meter{height:9px;border-radius:6px;background:#0c1420;border:1px solid var(--line);overflow:hidden;margin-top:8px}
+  .meter i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--accent),var(--green));transition:width .5s}
+
+  .log{font-family:var(--mono);font-size:12px;color:var(--muted);background:#080d15;border:1px solid var(--line);border-radius:12px;padding:12px;height:150px;overflow:auto}
+  .log div{padding:1px 0;white-space:pre-wrap}
+  .log .ok{color:#7fe0a8}.log .wr{color:#ffd68a}.log .er{color:#ff9aa6}.log .in{color:#8fd0ff}
+
+  /* architecture */
+  .archscroll{overflow-x:auto;border:1px solid var(--line);border-radius:13px;background:#080d15;padding:12px}
+  svg .lbl{font:600 12px var(--sans);fill:var(--ink)}
+  svg .sm{font:11px var(--mono);fill:var(--muted)}
+  svg .box{fill:#101a2a;stroke:#26374f}
+  svg .box.acc{stroke:#38e1c6}
+  svg .flowline{stroke:#33445f;stroke-width:1.6;fill:none}
+
+  /* requirement checklist */
+  .req{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+  @media(max-width:840px){.req{grid-template-columns:1fr}}
+  .req .r{display:flex;gap:10px;align-items:flex-start;border:1px solid var(--line);border-radius:11px;padding:10px 12px;background:var(--panel2)}
+  .req .r .ck{flex:none;width:20px;height:20px;border-radius:6px;background:var(--greenb);border:1px solid #1f5138;color:var(--green);display:grid;place-items:center;font-size:12px;font-weight:800}
+  .req .r .rt{font-size:13px}
+  .req .r .rt b{display:block;font-size:13.5px}
+  .req .r .rt span{color:var(--faint);font-size:12px}
+
+  .note{font-size:12px;color:var(--faint);border-top:1px solid var(--line);margin-top:26px;padding-top:14px}
+  .kicker{font-family:var(--display);font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);font-weight:700;margin:30px 0 10px}
+  .caserow{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  @media(max-width:840px){.caserow{grid-template-columns:1fr}}
+  .stat{font-family:var(--mono);font-size:26px;font-weight:700;color:var(--accent)}
+  .flag{font-size:11px;color:#ffd68a;background:var(--amberb);border:1px solid #5a4620;border-radius:7px;padding:2px 7px;display:inline-block}
+</style>
+</head>
+<body>
+
+<div class="top">
+  <div class="row">
+    <div class="brand">
+      <div class="t">Zero-Downtime Migration Command Center</div>
+      <div class="s">Magento&nbsp;2.4 multi-vendor marketplace&nbsp;+&nbsp;Node.js API &nbsp;·&nbsp; managed hosting &rarr; self-managed cloud server</div>
+    </div>
+    <span class="pill"><span class="dot" id="topDot"></span><span id="topStatus">Live &middot; ready</span></span>
+    <div class="btns">
+      <button class="b-primary" id="runBtn" onclick="runFull()">Run migration</button>
+      <button class="b-danger" id="rbBtn" onclick="rollback()" disabled>Rollback</button>
+      <button class="b-ghost" id="resetBtn" onclick="resetAll()">Reset</button>
+    </div>
+  </div>
+</div>
+
+<div class="wrap">
+
+  <!-- HERO -->
+  <div class="hero">
+    <div class="card">
+      <h3>Store availability</h3>
+      <div class="sub">The whole product promise is 24/7. Cutover must not close the door.</div>
+      <div class="store">
+        <div class="dot" id="storeDot" style="width:16px;height:16px"></div>
+        <div>
+          <div class="big" id="storeState" style="color:var(--green)">OPEN</div>
+          <div class="lbl">seller portal &middot; mobile app &middot; access gates</div>
+        </div>
+      </div>
+    </div>
+    <div class="card downtime">
+      <h3>Measured downtime this cutover</h3>
+      <div class="sub">Target window: under 60 seconds. Rollback stays armed the whole time.</div>
+      <div class="num" id="downtime">0.0s</div>
+      <div class="lbl" style="color:var(--muted);font-size:12px" id="dtNote">not started</div>
+    </div>
+  </div>
+
+  <!-- STEPPER -->
+  <div class="stepper" id="stepper"></div>
+
+  <!-- MAIN GRID -->
+  <div class="grid">
+
+    <!-- Assessment -->
+    <div class="card">
+      <h3>1 &middot; Assessment &mdash; current environment</h3>
+      <div class="sub">Auto-detected from the live production stack.</div>
+      <div class="kv"><span class="k">Application</span><span class="v">Magento 2.4 Community</span></div>
+      <div class="kv"><span class="k">Marketplace</span><span class="v">Webkul Multi-Vendor</span></div>
+      <div class="kv"><span class="k">Payments</span><span class="v">Stripe (live)</span></div>
+      <div class="kv"><span class="k">Companion app</span><span class="v">Node.js API</span></div>
+      <div class="kv"><span class="k">Search</span><span class="v">OpenSearch</span></div>
+      <div class="kv"><span class="k">Cache / sessions</span><span class="v">Redis</span></div>
+      <div class="kv"><span class="k">Monitoring</span><span class="v">New Relic (EU)</span></div>
+      <div class="kv"><span class="k">Current host</span><span class="v"><span class="tag a">managed</span></span></div>
+      <div class="kv"><span class="k">Backend response now</span><span class="v" id="assessTtfb">~758 ms</span></div>
+    </div>
+
+    <!-- Target build + services -->
+    <div class="card">
+      <h3>2 &middot; Build &mdash; new self-managed server</h3>
+      <div class="sub">One tuned box, full root, optional Docker Compose stack.</div>
+      <div class="svc" id="svc">
+        <div class="s" data-k="nginx"><span class="led"></span><span class="l">Nginx + reverse proxy</span><span class="stt">idle</span></div>
+        <div class="s" data-k="php"><span class="led"></span><span class="l">PHP-FPM / Magento</span><span class="stt">idle</span></div>
+        <div class="s" data-k="node"><span class="led"></span><span class="l">Node.js API</span><span class="stt">idle</span></div>
+        <div class="s" data-k="mysql"><span class="led"></span><span class="l">MySQL</span><span class="stt">idle</span></div>
+        <div class="s" data-k="redis"><span class="led"></span><span class="l">Redis</span><span class="stt">idle</span></div>
+        <div class="s" data-k="opensearch"><span class="led"></span><span class="l">OpenSearch</span><span class="stt">idle</span></div>
+        <div class="s" data-k="ssl"><span class="led"></span><span class="l">SSL / vhosts</span><span class="stt">idle</span></div>
+        <div class="s" data-k="stripe"><span class="led"></span><span class="l">Stripe webhooks</span><span class="stt">idle</span></div>
+      </div>
+    </div>
+
+    <!-- DB sync -->
+    <div class="card">
+      <h3>3 &middot; Synchronize &mdash; live database replication</h3>
+      <div class="sub">Binlog replication keeps the new box near-real-time. Media synced incrementally.</div>
+      <div class="repl">
+        <div class="node"><div class="nm">SOURCE &middot; managed</div><div class="db" id="srcRows">1,284,900 rows</div></div>
+        <div class="flow" id="flow"><i style="animation-delay:0s"></i><i style="animation-delay:.35s"></i><i style="animation-delay:.7s"></i></div>
+        <div class="node"><div class="nm">TARGET &middot; self-managed</div><div class="db" id="tgtRows">0 rows</div></div>
+      </div>
+      <div class="kv" style="margin-top:10px"><span class="k">Replication lag</span><span class="v" id="lag">&mdash;</span></div>
+      <div class="kv"><span class="k">Media files (rsync)</span><span class="v" id="media">&mdash;</span></div>
+      <div class="meter"><i id="syncMeter"></i></div>
+    </div>
+
+    <!-- Validate -->
+    <div class="card">
+      <h3>4 &middot; Validate &mdash; pre-cutover tests</h3>
+      <div class="sub">Run on the new box while the old one still serves live traffic.</div>
+      <div class="svc" id="tests">
+        <div class="s" data-k="t1"><span class="led"></span><span class="l">Storefront smoke test</span><span class="stt">queued</span></div>
+        <div class="s" data-k="t2"><span class="led"></span><span class="l">Seller login (Webkul)</span><span class="stt">queued</span></div>
+        <div class="s" data-k="t3"><span class="led"></span><span class="l">Stripe test charge</span><span class="stt">queued</span></div>
+        <div class="s" data-k="t4"><span class="led"></span><span class="l">OpenSearch reindex</span><span class="stt">queued</span></div>
+        <div class="s" data-k="t5"><span class="led"></span><span class="l">Node API health</span><span class="stt">queued</span></div>
+        <div class="s" data-k="t6"><span class="led"></span><span class="l">Checkout end-to-end</span><span class="stt">queued</span></div>
+      </div>
+    </div>
+
+    <!-- Cutover -->
+    <div class="card">
+      <h3>5 &middot; Cutover &mdash; controlled switch</h3>
+      <div class="sub">Short read-only flag, final delta sync, reverse-proxy flip.</div>
+      <div class="kv"><span class="k">DNS TTL</span><span class="v" id="ttl">60 s (pre-lowered)</span></div>
+      <div class="kv"><span class="k">Read-only window</span><span class="v" id="ro">&mdash;</span></div>
+      <div class="kv"><span class="k">Final delta sync</span><span class="v" id="delta">&mdash;</span></div>
+      <div class="kv"><span class="k">Traffic served by</span><span class="v" id="servedBy"><span class="tag a">managed</span></span></div>
+      <div class="meter"><i id="cutMeter"></i></div>
+    </div>
+
+    <!-- Performance -->
+    <div class="card">
+      <h3>6 &middot; Monitor &mdash; performance after tuning</h3>
+      <div class="sub">Same New Relic, one tuned box. Target figure is illustrative.</div>
+      <div class="gauge">
+        <div class="gwrap">
+          <svg viewBox="0 0 120 120" width="132" height="132">
+            <circle cx="60" cy="60" r="52" fill="none" stroke="#132033" stroke-width="12"/>
+            <circle id="gArc" cx="60" cy="60" r="52" fill="none" stroke="#35e3d1" stroke-width="12"
+              stroke-linecap="round" stroke-dasharray="327" stroke-dashoffset="327"
+              transform="rotate(-90 60 60)"/>
+          </svg>
+          <div class="gnum"><b id="gVal" style="color:#ff5468">758</b><span>ms backend</span></div>
+        </div>
+        <div class="legend">
+          <div class="li"><span class="swatch" style="background:var(--red)"></span> before &middot; managed &middot; ~758 ms</div>
+          <div class="li"><span class="swatch" style="background:var(--green)"></span> after &middot; tuned &middot; target ~320 ms <span class="flag">sample target</span></div>
+          <div class="li"><span class="swatch" style="background:var(--accent2)"></span> New Relic APM stays connected</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Data integrity -->
+    <div class="card">
+      <h3>Data integrity</h3>
+      <div class="sub">Nothing lost in the move.</div>
+      <div class="kv"><span class="k">Database rows</span><span class="v" id="di1"><span class="tag">pending</span></span></div>
+      <div class="kv"><span class="k">Product media</span><span class="v" id="di2"><span class="tag">pending</span></span></div>
+      <div class="kv"><span class="k">Seller orders</span><span class="v" id="di3"><span class="tag">pending</span></span></div>
+      <div class="kv"><span class="k">Records dropped</span><span class="v" id="di4"><span class="tag">&mdash;</span></span></div>
+    </div>
+
+    <!-- Rollback -->
+    <div class="card">
+      <h3>Rollback &mdash; always armed</h3>
+      <div class="sub">Old box stays live and in-sync during the watch window. One flip back.</div>
+      <div class="kv"><span class="k">Rollback state</span><span class="v" id="rbState"><span class="tag">standby</span></span></div>
+      <div class="kv"><span class="k">Old box</span><span class="v" id="rbOld"><span class="tag g">live &middot; in-sync</span></span></div>
+      <div class="kv"><span class="k">Flip-back time</span><span class="v" id="rbTime">&lt; 30 s</span></div>
+      <div style="margin-top:12px"><button class="b-danger" onclick="rollback()" id="rbBtn2" disabled style="width:100%">Trigger rollback to old box</button></div>
+    </div>
+
+    <!-- Activity log -->
+    <div class="card span2">
+      <h3>Migration activity</h3>
+      <div class="sub">Live event stream. Sample events for demonstration.</div>
+      <div class="log" id="log"><div class="in">› waiting to start…</div></div>
+    </div>
+
+    <!-- Architecture -->
+    <div class="card span2">
+      <h3>Target architecture &mdash; self-managed cloud server</h3>
+      <div class="sub">One reverse proxy in front, everything consolidated, optional Docker Compose, CI/CD deploy, rollback path.</div>
+      <div class="archscroll">
+        <svg viewBox="0 0 980 300" width="980" height="300" role="img" aria-label="Target architecture">
+          <!-- internet -->
+          <rect class="box acc" x="20" y="120" width="120" height="56" rx="10"/>
+          <text class="lbl" x="80" y="144" text-anchor="middle">Internet</text>
+          <text class="sm" x="80" y="162" text-anchor="middle">DNS + SSL</text>
+          <!-- reverse proxy -->
+          <rect class="box acc" x="190" y="120" width="150" height="56" rx="10"/>
+          <text class="lbl" x="265" y="144" text-anchor="middle">Nginx</text>
+          <text class="sm" x="265" y="162" text-anchor="middle">reverse proxy + TLS</text>
+          <!-- magento -->
+          <rect class="box" x="410" y="20" width="170" height="56" rx="10"/>
+          <text class="lbl" x="495" y="44" text-anchor="middle">Magento 2.4 (PHP-FPM)</text>
+          <text class="sm" x="495" y="62" text-anchor="middle">Webkul marketplace</text>
+          <!-- node -->
+          <rect class="box" x="410" y="100" width="170" height="56" rx="10"/>
+          <text class="lbl" x="495" y="124" text-anchor="middle">Node.js API</text>
+          <text class="sm" x="495" y="142" text-anchor="middle">mobile app + gates</text>
+          <!-- stripe -->
+          <rect class="box" x="410" y="180" width="170" height="56" rx="10"/>
+          <text class="lbl" x="495" y="204" text-anchor="middle">Stripe webhooks</text>
+          <text class="sm" x="495" y="222" text-anchor="middle">payments</text>
+          <!-- data layer -->
+          <rect class="box" x="650" y="20" width="150" height="50" rx="10"/>
+          <text class="lbl" x="725" y="50" text-anchor="middle">MySQL</text>
+          <rect class="box" x="650" y="86" width="150" height="50" rx="10"/>
+          <text class="lbl" x="725" y="116" text-anchor="middle">Redis</text>
+          <rect class="box" x="650" y="152" width="150" height="50" rx="10"/>
+          <text class="lbl" x="725" y="182" text-anchor="middle">OpenSearch</text>
+          <!-- ops -->
+          <rect class="box acc" x="620" y="218" width="340" height="56" rx="10"/>
+          <text class="lbl" x="790" y="242" text-anchor="middle">New Relic · CI/CD deploy · nightly backups</text>
+          <text class="sm" x="790" y="260" text-anchor="middle">rollback snapshot + replication to old box</text>
+          <!-- docker note -->
+          <rect class="box" x="850" y="20" width="110" height="116" rx="10"/>
+          <text class="sm" x="905" y="70" text-anchor="middle">optional</text>
+          <text class="lbl" x="905" y="90" text-anchor="middle">Docker</text>
+          <text class="sm" x="905" y="108" text-anchor="middle">Compose</text>
+          <!-- lines -->
+          <path class="flowline" d="M140 148 H190"/>
+          <path class="flowline" d="M340 140 C375 140 375 48 410 48"/>
+          <path class="flowline" d="M340 148 H410"/>
+          <path class="flowline" d="M340 156 C375 156 375 208 410 208"/>
+          <path class="flowline" d="M580 48 H650"/>
+          <path class="flowline" d="M580 128 C615 128 615 111 650 111"/>
+          <path class="flowline" d="M580 208 C615 208 615 177 650 177"/>
+        </svg>
+      </div>
+    </div>
+
+    <!-- Documentation & handover -->
+    <div class="card span2">
+      <h3>Documentation &amp; handover</h3>
+      <div class="sub">So your own team can run the new box without us in the loop.</div>
+      <div class="req">
+        <div class="r"><div class="ck">✓</div><div class="rt"><b>Server build runbook</b><span>every package, version and setting</span></div></div>
+        <div class="r"><div class="ck">✓</div><div class="rt"><b>Service configs</b><span>Nginx, PHP-FPM, MySQL, Redis, OpenSearch</span></div></div>
+        <div class="r"><div class="ck">✓</div><div class="rt"><b>Rollback playbook</b><span>step list to flip back to the old box</span></div></div>
+        <div class="r"><div class="ck">✓</div><div class="rt"><b>Backup &amp; restore steps</b><span>database and media, tested</span></div></div>
+        <div class="r"><div class="ck">✓</div><div class="rt"><b>Monitoring dashboards</b><span>New Relic alerts kept connected</span></div></div>
+        <div class="r"><div class="ck">✓</div><div class="rt"><b>Deploy &amp; release guide</b><span>how a new release goes out safely</span></div></div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- PROVEN APPROACH / SIMILAR MIGRATION -->
+  <div class="kicker">Proven approach &middot; a similar migration</div>
+  <div class="caserow">
+    <div class="card">
+      <h3>Case &mdash; multi-vendor Magento 2.4, managed &rarr; self-managed</h3>
+      <div class="sub" style="margin-bottom:14px">Illustrative example. <span class="flag">replace with your team's real project</span></div>
+      <div class="kv"><span class="k">Store type</span><span class="v">Marketplace, 300+ sellers</span></div>
+      <div class="kv"><span class="k">Stack moved</span><span class="v">Magento + Node + MySQL + Redis + OpenSearch</span></div>
+      <div class="kv"><span class="k">From &rarr; to</span><span class="v">Managed &rarr; self-managed cloud</span></div>
+      <div class="kv"><span class="k">Measured downtime</span><span class="v" style="color:var(--green)">45 seconds</span></div>
+      <div class="kv"><span class="k">Data lost</span><span class="v" style="color:var(--green)">0 records</span></div>
+      <div class="kv"><span class="k">Rollback used</span><span class="v">no (stayed armed)</span></div>
+    </div>
+    <div class="card">
+      <h3>How downtime stayed near zero</h3>
+      <div class="sub" style="margin-bottom:12px">The method behind the number above.</div>
+      <div class="kv"><span class="k">1</span><span class="v" style="text-align:right">Lowered DNS TTL days ahead</span></div>
+      <div class="kv"><span class="k">2</span><span class="v" style="text-align:right">Built + fully restored the new box</span></div>
+      <div class="kv"><span class="k">3</span><span class="v" style="text-align:right">Live binlog replication, near-zero lag</span></div>
+      <div class="kv"><span class="k">4</span><span class="v" style="text-align:right">Validated on new box, old box still live</span></div>
+      <div class="kv"><span class="k">5</span><span class="v" style="text-align:right">Short read-only, final delta, proxy flip</span></div>
+      <div class="kv"><span class="k">6</span><span class="v" style="text-align:right">Old box kept in-sync = instant rollback</span></div>
+    </div>
+  </div>
+
+  <!-- REQUIREMENT COVERAGE -->
+  <div class="kicker">Requirement coverage &middot; every line in the brief</div>
+  <div class="req" id="reqGrid"></div>
+
+  <div class="note">
+    This is an illustrative command-center view built to demonstrate the migration approach. Figures such as row counts, timings, the ~320&nbsp;ms target and the case-study numbers are sample values for demonstration and are meant to be replaced with real project data. The stack shown (Magento&nbsp;2.4, Webkul, Stripe, Node.js, MySQL, Redis, OpenSearch, Nginx, New Relic) reflects the published brief and public environment. No private or customer data is used.
+  </div>
+</div>
+
+<script>
+  // ---------- data ----------
+  var PHASES = [
+    {k:'Build', st:'server + services'},
+    {k:'Synchronize', st:'db + media'},
+    {k:'Validate', st:'pre-cutover tests'},
+    {k:'Cutover', st:'controlled switch'},
+    {k:'Monitor', st:'health + perf'},
+    {k:'Rollback-ready', st:'armed'}
+  ];
+  var REQS = [
+    ['Assess current Magento, Node, MySQL & environment','Assessment panel'],
+    ['Build & configure the new server','Build panel'],
+    ['Install Node, MySQL, Redis, OpenSearch, web server','Service grid'],
+    ['Deploy Magento & Node.js applications','Build + CI/CD deploy'],
+    ['Migrate & sync databases, files, media','Synchronize + data integrity'],
+    ['Configure SSL, virtual hosts, reverse proxy','Nginx / SSL in build + arch'],
+    ['Implement database synchronization','Live replication panel'],
+    ['Pre-cutover testing & validation','Validate panel'],
+    ['Controlled cutover with minimal downtime','Cutover + downtime counter'],
+    ['Prepare rollback strategy','Rollback panel (working)'],
+    ['Monitor & troubleshoot after migration','Monitor + New Relic'],
+    ['Technical documentation & handover','Handover panel below'],
+    ['Docker / containerization (mandatory skill)','Optional Docker Compose in arch'],
+    ['Deployment automation (mandatory skill)','CI/CD deploy badge in arch']
+  ];
+
+  // ---------- build static UI ----------
+  var stepper = document.getElementById('stepper');
+  PHASES.forEach(function(p,i){
+    var d = document.createElement('div');
+    d.className='step'; d.id='step'+i;
+    d.innerHTML = '<div class="n">'+(i+1)+'</div><div class="k">'+p.k+'</div><div class="st">'+p.st+'</div><div class="bar"></div>';
+    stepper.appendChild(d);
+  });
+  var reqGrid = document.getElementById('reqGrid');
+  REQS.forEach(function(r){
+    var d=document.createElement('div'); d.className='r';
+    d.innerHTML='<div class="ck">✓</div><div class="rt"><b>'+r[0]+'</b><span>'+r[1]+'</span></div>';
+    reqGrid.appendChild(d);
+  });
+
+  // ---------- helpers ----------
+  var timers = [];
+  function after(ms,fn){ var t=setTimeout(fn,ms); timers.push(t); return t; }
+  function clearTimers(){ timers.forEach(clearTimeout); timers=[]; if(dtTimer){clearInterval(dtTimer);dtTimer=null;} }
+  function el(id){ return document.getElementById(id); }
+  function log(msg,cls){
+    var l=el('log'); var d=document.createElement('div');
+    d.className=cls||''; d.textContent='› '+msg; l.appendChild(d); l.scrollTop=l.scrollHeight;
+  }
+  function setStep(i,state){
+    var s=el('step'+i); if(!s)return;
+    s.classList.remove('active','done');
+    if(state)s.classList.add(state);
+    s.querySelector('.bar').style.width = state==='done'?'100%':(state==='active'?'55%':'0');
+  }
+  function setLed(scope,k,cls,txt){
+    var node=document.querySelector('#'+scope+' [data-k="'+k+'"]');
+    if(!node)return;
+    var led=node.querySelector('.led'); led.className='led '+cls;
+    if(txt) node.querySelector('.stt').textContent=txt;
+  }
+
+  var dtTimer=null, dtVal=0, running=false;
+
+  // ---------- master run ----------
+  function runFull(){
+    if(running) return;
+    resetAll(true);
+    running=true;
+    el('runBtn').disabled=true;
+    el('topStatus').textContent='migration running';
+    el('topDot').className='dot amber';
+    log('migration started · target: self-managed cloud server','in');
+
+    // Phase 1 - Build
+    setStep(0,'active');
+    log('Phase 1 — building new server (Ubuntu, tuned)','in');
+    var svcKeys=['nginx','php','node','mysql','redis','opensearch','ssl','stripe'];
+    svcKeys.forEach(function(k,idx){
+      after(300+idx*260,function(){ setLed('svc',k,'mid','installing'); });
+      after(300+idx*260+180,function(){ setLed('svc',k,'on','ready'); });
+    });
+    after(2600,function(){ setStep(0,'done'); log('all services up on new box','ok'); });
+
+    // Phase 2 - Synchronize
+    after(2700,function(){
+      setStep(1,'active');
+      log('Phase 2 — restoring database + starting replication','in');
+      el('flow').classList.add('run');
+      var total=1284900, shown=0;
+      var syncI=setInterval(function(){
+        shown+=Math.round(total/22);
+        if(shown>=total){shown=total;clearInterval(syncI);}
+        el('tgtRows').textContent=shown.toLocaleString()+' rows';
+        el('syncMeter').style.width=Math.round(shown/total*100)+'%';
+      },110);
+      timers.push(syncI);
+    });
+    after(4900,function(){
+      el('lag').innerHTML='<span class="tag g">0.4 s behind</span>';
+      el('media').innerHTML='<span class="tag g">96,540 files · synced</span>';
+      log('binlog replication live · media rsynced','ok');
+      setStep(1,'done');
+    });
+
+    // Phase 3 - Validate
+    after(5100,function(){
+      setStep(2,'active');
+      log('Phase 3 — running validation on new box (old box still live)','in');
+      ['t1','t2','t3','t4','t5','t6'].forEach(function(k,idx){
+        after(idx*300,function(){ setLed('tests',k,'mid','running'); });
+        after(idx*300+220,function(){ setLed('tests',k,'on','pass'); });
+      });
+    });
+    after(7300,function(){ setStep(2,'done'); log('all validation checks passed','ok'); });
+
+    // Phase 4 - Cutover
+    after(7500,function(){
+      setStep(3,'active');
+      log('Phase 4 — cutover: read-only flag on, final delta sync','wr');
+      el('ro').innerHTML='<span class="tag a">enabled</span>';
+      el('storeState').textContent='READ-ONLY';
+      el('storeState').style.color='var(--amber)';
+      el('storeDot').className='dot amber';
+      startDowntime();
+    });
+    after(8600,function(){
+      el('delta').innerHTML='<span class="tag g">applied · 0.2 s</span>';
+      log('final delta applied · flipping reverse proxy','wr');
+      el('cutMeter').style.width='100%';
+    });
+    after(9400,function(){
+      stopDowntime();
+      el('servedBy').innerHTML='<span class="tag g">self-managed</span>';
+      el('ro').innerHTML='<span class="tag g">released</span>';
+      el('storeState').textContent='OPEN';
+      el('storeState').style.color='var(--green)';
+      el('storeDot').className='dot';
+      log('traffic now on self-managed box · store OPEN','ok');
+      setStep(3,'done');
+      // data integrity
+      el('di1').innerHTML='<span class="tag g">1,284,900 · matched</span>';
+      el('di2').innerHTML='<span class="tag g">96,540 · matched</span>';
+      el('di3').innerHTML='<span class="tag g">all present</span>';
+      el('di4').innerHTML='<span class="tag g">0</span>';
+    });
+
+    // Phase 5 - Monitor
+    after(9700,function(){
+      setStep(4,'active');
+      log('Phase 5 — monitoring · New Relic connected · tuning caches','in');
+      el('assessTtfb').textContent='~758 ms → tuning';
+      animateGauge(758,320);
+    });
+    after(11800,function(){ setStep(4,'done'); log('backend response improved to target ~320 ms (sample)','ok'); });
+
+    // Phase 6 - Rollback ready
+    after(12000,function(){
+      setStep(5,'done');
+      el('rbState').innerHTML='<span class="tag g">armed · one-flip</span>';
+      el('rbBtn').disabled=false; el('rbBtn2').disabled=false;
+      el('topStatus').textContent='migration complete';
+      el('topDot').className='dot';
+      el('runBtn').disabled=false;
+      running=false;
+      log('migration complete · rollback stays armed during watch window','ok');
+    });
+  }
+
+  // ---------- downtime counter ----------
+  function startDowntime(){
+    dtVal=0; el('dtNote').textContent='read-only window…';
+    dtTimer=setInterval(function(){
+      dtVal+=0.1;
+      var n=el('downtime'); n.textContent=dtVal.toFixed(1)+'s';
+      n.className='num'+(dtVal>30?' bad':(dtVal>15?' warn':''));
+    },100);
+  }
+  function stopDowntime(){
+    if(dtTimer){clearInterval(dtTimer);dtTimer=null;}
+    el('dtNote').textContent='cutover done · well under target';
+  }
+
+  // ---------- gauge ----------
+  function animateGauge(from,to){
+    var v=from, step=(from-to)/30, i=0;
+    var arc=el('gArc'), full=327;
+    var gi=setInterval(function(){
+      i++; v-=step; if(i>=30){v=to;clearInterval(gi);}
+      el('gVal').textContent=Math.round(v);
+      var pct=1-(v/900); if(pct<0)pct=0; if(pct>1)pct=1;
+      arc.style.strokeDashoffset = full*(1-pct);
+      arc.style.stroke = v>600?'#ff5468':(v>430?'#ffb43a':'#2fe0a0');
+      el('gVal').style.color = arc.style.stroke;
+    },45);
+    timers.push(gi);
+  }
+
+  // ---------- rollback ----------
+  function rollback(){
+    clearTimers(); stopDowntime();
+    log('ROLLBACK triggered · flipping reverse proxy back to old box','er');
+    el('topStatus').textContent='rolling back';
+    el('topDot').className='dot red';
+    el('storeState').textContent='OPEN';
+    el('storeState').style.color='var(--green)';
+    el('storeDot').className='dot';
+    el('servedBy').innerHTML='<span class="tag a">managed (rolled back)</span>';
+    el('rbState').innerHTML='<span class="tag a">rolled back · safe</span>';
+    el('downtime').textContent='0.0s';
+    el('downtime').className='num';
+    el('dtNote').textContent='rollback kept the store open';
+    after(700,function(){
+      log('back on old box · 0 s customer downtime · data intact','ok');
+      el('topStatus').textContent='rolled back · stable';
+      el('topDot').className='dot';
+      el('rbBtn').disabled=true; el('rbBtn2').disabled=true;
+      el('runBtn').disabled=false; running=false;
+    });
+  }
+
+  // ---------- reset ----------
+  function resetAll(keepLog){
+    clearTimers(); stopDowntime(); running=false; dtVal=0;
+    el('runBtn').disabled=false; el('rbBtn').disabled=true; el('rbBtn2').disabled=true;
+    el('topStatus').textContent='Live · ready'; el('topDot').className='dot';
+    el('downtime').textContent='0.0s'; el('downtime').className='num'; el('dtNote').textContent='not started';
+    el('storeState').textContent='OPEN'; el('storeState').style.color='var(--green)'; el('storeDot').className='dot';
+    PHASES.forEach(function(_,i){ setStep(i,''); });
+    ['nginx','php','node','mysql','redis','opensearch','ssl','stripe'].forEach(function(k){ setLed('svc',k,'','idle'); });
+    ['t1','t2','t3','t4','t5','t6'].forEach(function(k){ setLed('tests',k,'','queued'); });
+    el('flow').classList.remove('run');
+    el('srcRows').textContent='1,284,900 rows'; el('tgtRows').textContent='0 rows';
+    el('lag').innerHTML='&mdash;'; el('media').innerHTML='&mdash;';
+    el('syncMeter').style.width='0'; el('cutMeter').style.width='0';
+    el('ro').innerHTML='&mdash;'; el('delta').innerHTML='&mdash;';
+    el('servedBy').innerHTML='<span class="tag a">managed</span>';
+    el('di1').innerHTML='<span class="tag">pending</span>'; el('di2').innerHTML='<span class="tag">pending</span>';
+    el('di3').innerHTML='<span class="tag">pending</span>'; el('di4').innerHTML='<span class="tag">&mdash;</span>';
+    el('rbState').innerHTML='<span class="tag">standby</span>';
+    el('gVal').textContent='758'; el('gVal').style.color='#ff5468';
+    el('gArc').style.strokeDashoffset='327'; el('gArc').style.stroke='#35e3d1';
+    el('assessTtfb').textContent='~758 ms';
+    if(!keepLog){ el('log').innerHTML='<div class="in">› waiting to start…</div>'; }
+  }
+</script>
+</body>
+</html>
