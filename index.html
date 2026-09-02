@@ -147,7 +147,7 @@
   .meter{height:9px;border-radius:6px;background:#0c1420;border:1px solid var(--line);overflow:hidden;margin-top:8px}
   .meter i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--accent),var(--green));transition:width .5s}
 
-  .log{font-family:var(--mono);font-size:12px;color:var(--muted);background:#080d15;border:1px solid var(--line);border-radius:12px;padding:12px;height:150px;overflow:auto}
+  .log{font-family:var(--mono);font-size:12px;color:var(--muted);background:#080d15;border:1px solid var(--line);border-radius:12px;padding:12px;height:110px;overflow:auto}
   .log div{padding:1px 0;white-space:pre-wrap}
   .log .ok{color:#7fe0a8}.log .wr{color:#ffd68a}.log .er{color:#ff9aa6}.log .in{color:#8fd0ff}
 
@@ -181,6 +181,33 @@
   @media(max-width:840px){.caserow{grid-template-columns:1fr}}
   .stat{font-family:var(--mono);font-size:26px;font-weight:700;color:var(--accent)}
   .flag{font-size:11px;color:#ffd68a;background:var(--amberb);border:1px solid #5a4620;border-radius:7px;padding:2px 7px;display:inline-block}
+
+  /* section nav */
+  .secnav{
+    position:sticky;top:52px;z-index:49;
+    backdrop-filter:blur(10px);
+    background:linear-gradient(180deg, rgba(7,11,18,.94), rgba(7,11,18,.78));
+    border-bottom:1px solid var(--line);
+    overflow-x:auto;
+    scrollbar-width:none;
+    -webkit-overflow-scrolling:touch;
+  }
+  .secnav::-webkit-scrollbar{display:none}
+  .secnav .inner{max-width:1180px;margin:0 auto;padding:8px 20px;display:flex;gap:6px;flex-wrap:nowrap}
+  .secnav a,.secnav button.nb{
+    flex:none;display:inline-flex;align-items:center;gap:5px;
+    padding:5px 12px;border-radius:999px;
+    border:1px solid var(--line);background:var(--panel2);
+    color:var(--muted);font-size:12px;font-weight:600;
+    text-decoration:none;white-space:nowrap;
+    transition:.15s;cursor:pointer;
+  }
+  .secnav a:hover,.secnav a.act,.secnav button.nb:hover,.secnav button.nb.act{border-color:var(--accent);color:var(--ink);background:var(--panel)}
+  .secnav a.act,.secnav button.nb.act{color:var(--accent);box-shadow:0 0 12px -4px rgba(53,227,209,.4)}
+  .secnav a .ico{font-size:13px}
+  html{scroll-behavior:smooth;scroll-padding-top:110px}
+  .topbtn{display:flex;justify-content:center;margin:30px 0 0}
+  .topbtn button.nb{padding:8px 18px;font-size:13px}
 </style>
 </head>
 <body>
@@ -199,6 +226,23 @@
     </div>
   </div>
 </div>
+
+<nav class="secnav">
+  <div class="inner">
+    <button class="nb" data-to="sec-assess" onclick="goSec(this)"><span class="ico">&#9881;</span> Assessment</button>
+    <button class="nb" data-to="sec-build" onclick="goSec(this)"><span class="ico">&#9649;</span> Build</button>
+    <button class="nb" data-to="sec-sync" onclick="goSec(this)"><span class="ico">&#8644;</span> Sync</button>
+    <button class="nb" data-to="sec-validate" onclick="goSec(this)"><span class="ico">&#10003;</span> Validate</button>
+    <button class="nb" data-to="sec-cutover" onclick="goSec(this)"><span class="ico">&#9889;</span> Cutover</button>
+    <button class="nb" data-to="sec-monitor" onclick="goSec(this)"><span class="ico">&#9673;</span> Monitor</button>
+    <button class="nb" data-to="sec-arch" onclick="goSec(this)"><span class="ico">&#9638;</span> Architecture</button>
+    <button class="nb" data-to="sec-docs" onclick="goSec(this)"><span class="ico">&#9776;</span> Docs</button>
+    <button class="nb" data-to="sec-runbook" onclick="goSec(this)"><span class="ico">&#9654;</span> Runbook</button>
+    <button class="nb" data-to="sec-approach" onclick="goSec(this)"><span class="ico">&#9733;</span> Approach</button>
+    <button class="nb" data-to="sec-track" onclick="goSec(this)"><span class="ico">&#9670;</span> Track Record</button>
+    <button class="nb" data-to="sec-reqs" onclick="goSec(this)"><span class="ico">&#10004;</span> Coverage</button>
+  </div>
+</nav>
 
 <div class="wrap">
 
@@ -230,14 +274,14 @@
   <div class="grid">
 
     <!-- Assessment -->
-    <div class="card">
+    <div class="card" id="sec-assess">
       <h3>1 &middot; Assessment &mdash; current environment</h3>
       <div class="sub">Auto-detected from the live production stack.</div>
       <div class="kv"><span class="k">Application</span><span class="v">Magento 2.4 Community</span></div>
       <div class="kv"><span class="k">Marketplace</span><span class="v">Webkul Multi-Vendor</span></div>
       <div class="kv"><span class="k">Payments</span><span class="v">Stripe (live)</span></div>
       <div class="kv"><span class="k">Companion app</span><span class="v">Node.js API</span></div>
-      <div class="kv"><span class="k">Search</span><span class="v">OpenSearch</span></div>
+      <div class="kv"><span class="k">Search</span><span class="v">OpenSearch or Elasticsearch</span></div>
       <div class="kv"><span class="k">Cache / sessions</span><span class="v">Redis</span></div>
       <div class="kv"><span class="k">Paid extensions</span><span class="v">Landofcoder HelpDesk, WeltPixel</span></div>
       <div class="kv"><span class="k">Storefront languages</span><span class="v">German, English, Italian</span></div>
@@ -248,7 +292,7 @@
     </div>
 
     <!-- Target build + services -->
-    <div class="card">
+    <div class="card" id="sec-build">
       <h3>2 &middot; Build &mdash; new self-managed server</h3>
       <div class="sub">One tuned box, full root, optional Docker Compose stack.</div>
       <div class="svc" id="svc">
@@ -257,7 +301,7 @@
         <div class="s" data-k="node"><span class="led"></span><span class="l">Node.js API</span><span class="stt">idle</span></div>
         <div class="s" data-k="mysql"><span class="led"></span><span class="l">MySQL</span><span class="stt">idle</span></div>
         <div class="s" data-k="redis"><span class="led"></span><span class="l">Redis</span><span class="stt">idle</span></div>
-        <div class="s" data-k="opensearch"><span class="led"></span><span class="l">OpenSearch</span><span class="stt">idle</span></div>
+        <div class="s" data-k="opensearch"><span class="led"></span><span class="l">OpenSearch / Elasticsearch</span><span class="stt">idle</span></div>
         <div class="s" data-k="ssl"><span class="led"></span><span class="l">SSL / vhosts</span><span class="stt">idle</span></div>
         <div class="s" data-k="stripe"><span class="led"></span><span class="l">Stripe webhooks</span><span class="stt">idle</span></div>
         <div class="s" data-k="ext"><span class="led"></span><span class="l">Paid extensions relicensed</span><span class="stt">idle</span></div>
@@ -266,7 +310,7 @@
     </div>
 
     <!-- DB sync -->
-    <div class="card">
+    <div class="card" id="sec-sync">
       <h3>3 &middot; Synchronize &mdash; live database replication</h3>
       <div class="sub">Binlog replication keeps the new box near-real-time. Media synced incrementally.</div>
       <div class="repl">
@@ -280,14 +324,14 @@
     </div>
 
     <!-- Validate -->
-    <div class="card">
+    <div class="card" id="sec-validate">
       <h3>4 &middot; Validate &mdash; pre-cutover tests</h3>
       <div class="sub">Run on the new box while the old one still serves live traffic.</div>
       <div class="svc" id="tests">
         <div class="s" data-k="t1"><span class="led"></span><span class="l">Storefront smoke test</span><span class="stt">queued</span></div>
         <div class="s" data-k="t2"><span class="led"></span><span class="l">Seller login (Webkul)</span><span class="stt">queued</span></div>
         <div class="s" data-k="t3"><span class="led"></span><span class="l">Stripe test charge</span><span class="stt">queued</span></div>
-        <div class="s" data-k="t4"><span class="led"></span><span class="l">OpenSearch reindex</span><span class="stt">queued</span></div>
+        <div class="s" data-k="t4"><span class="led"></span><span class="l">OpenSearch / Elasticsearch reindex</span><span class="stt">queued</span></div>
         <div class="s" data-k="t5"><span class="led"></span><span class="l">Node API health</span><span class="stt">queued</span></div>
         <div class="s" data-k="t6"><span class="led"></span><span class="l">Checkout end-to-end</span><span class="stt">queued</span></div>
         <div class="s" data-k="t7"><span class="led"></span><span class="l">HelpDesk tickets intact</span><span class="stt">queued</span></div>
@@ -296,7 +340,7 @@
     </div>
 
     <!-- Cutover -->
-    <div class="card">
+    <div class="card" id="sec-cutover">
       <h3>5 &middot; Cutover &mdash; controlled switch</h3>
       <div class="sub">Short read-only flag, final delta sync, reverse-proxy flip.</div>
       <div class="kv"><span class="k">DNS TTL</span><span class="v" id="ttl">60 s (pre-lowered)</span></div>
@@ -307,7 +351,7 @@
     </div>
 
     <!-- Performance -->
-    <div class="card">
+    <div class="card" id="sec-monitor">
       <h3>6 &middot; Monitor &mdash; performance after tuning</h3>
       <div class="sub">Same New Relic, one tuned box. Target figure is illustrative.</div>
       <div class="gauge">
@@ -356,7 +400,7 @@
     </div>
 
     <!-- Architecture -->
-    <div class="card span2">
+    <div class="card span2" id="sec-arch">
       <h3>Target architecture &mdash; self-managed cloud server</h3>
       <div class="sub">One reverse proxy in front, everything consolidated, optional Docker Compose, CI/CD deploy, rollback path.</div>
       <div class="archscroll">
@@ -387,7 +431,7 @@
           <rect class="box" x="650" y="86" width="150" height="50" rx="10"/>
           <text class="lbl" x="725" y="116" text-anchor="middle">Redis</text>
           <rect class="box" x="650" y="152" width="150" height="50" rx="10"/>
-          <text class="lbl" x="725" y="182" text-anchor="middle">OpenSearch</text>
+          <text class="lbl" x="725" y="182" text-anchor="middle" style="font-size:11px">OpenSearch / ES</text>
           <rect class="box" x="850" y="152" width="110" height="50" rx="10"/>
           <text class="lbl" x="905" y="172" text-anchor="middle">Superset</text>
           <text class="sm" x="905" y="190" text-anchor="middle">analytics</text>
@@ -414,12 +458,12 @@
     </div>
 
     <!-- Documentation & handover -->
-    <div class="card span2">
+    <div class="card span2" id="sec-docs">
       <h3>Documentation &amp; handover</h3>
       <div class="sub">So your own team can run the new box without us in the loop.</div>
       <div class="req">
         <div class="r"><div class="ck">✓</div><div class="rt"><b>Server build runbook</b><span>every package, version and setting</span></div></div>
-        <div class="r"><div class="ck">✓</div><div class="rt"><b>Service configs</b><span>Nginx, PHP-FPM, MySQL, Redis, OpenSearch</span></div></div>
+        <div class="r"><div class="ck">✓</div><div class="rt"><b>Service configs</b><span>Nginx, PHP-FPM, MySQL, Redis, OpenSearch / Elasticsearch</span></div></div>
         <div class="r"><div class="ck">✓</div><div class="rt"><b>Rollback playbook</b><span>step list to flip back to the old box</span></div></div>
         <div class="r"><div class="ck">✓</div><div class="rt"><b>Backup &amp; restore steps</b><span>database and media, tested</span></div></div>
         <div class="r"><div class="ck">✓</div><div class="rt"><b>Monitoring dashboards</b><span>New Relic alerts kept connected</span></div></div>
@@ -430,7 +474,7 @@
   </div>
 
   <!-- RUNBOOK -->
-  <div class="kicker">Runbook &middot; the actual plan for your move</div>
+  <div class="kicker" id="sec-runbook">Runbook &middot; the actual plan for your move</div>
   <div class="grid">
 
     <div class="card">
@@ -438,9 +482,9 @@
       <div class="sub">Nothing touches production in this phase.</div>
       <ul class="rb">
         <li>Ubuntu LTS, Nginx, PHP-FPM 8.3 with bcmath, intl, soap, sockets, xsl, zip, gd, opcache</li>
-        <li>MySQL 8, Redis 7, OpenSearch 2.x, Node LTS, Composer 2</li>
+        <li>MySQL 8, Redis 7, OpenSearch 2.x or Elasticsearch, Node LTS, Composer 2</li>
         <li>Redis split into three databases for default cache, page cache and sessions</li>
-        <li>OpenSearch heap at half the memory, capped at 31 GB</li>
+        <li>OpenSearch / Elasticsearch heap at half the memory, capped at 31 GB</li>
         <li>Nginx from the Magento sample config, TLS issued and stapled<br><span class="cmd">certbot certonly --nginx -d your-domain</span></li>
         <li>Same layout available as a Docker Compose stack if you prefer containers</li>
       </ul>
@@ -528,7 +572,7 @@
   </div>
 
   <!-- PROVEN APPROACH / SIMILAR MIGRATION -->
-  <div class="kicker">Proven approach &middot; a similar migration</div>
+  <div class="kicker" id="sec-approach">Proven approach &middot; a similar migration</div>
   <div class="caserow">
     <div class="card">
       <h3>The cutover lasts under a minute. Getting there takes days.</h3>
@@ -553,7 +597,7 @@
   </div>
 
   <!-- TRACK RECORD -->
-  <div class="kicker">Track record &middot; the team behind the move</div>
+  <div class="kicker" id="sec-track">Track record &middot; the team behind the move</div>
   <div class="grid">
 
     <div class="card">
@@ -613,8 +657,10 @@
   </div>
 
   <!-- REQUIREMENT COVERAGE -->
-  <div class="kicker">Requirement coverage &middot; every line in the brief</div>
+  <div class="kicker" id="sec-reqs">Requirement coverage &middot; every line in the brief</div>
   <div class="req" id="reqGrid"></div>
+
+  <div class="topbtn"><button class="nb" onclick="window.scrollTo({top:0,behavior:'smooth'})">&#8593; Back to top</button></div>
 
   <div class="note">
     The counters, row and file totals and timings on this page are illustrative, they show how the move is tracked rather than results already recorded. The ~320&nbsp;ms figure is the target we aim for on a tuned server. The stack and the risks described are drawn from the published brief and from what the environment shows publicly, and the runbook is the plan we would follow. No private or customer data appears anywhere on this page.
@@ -634,7 +680,7 @@
   var REQS = [
     ['Assess current Magento, Node, MySQL & environment','Assessment panel'],
     ['Build & configure the new server','Build panel'],
-    ['Install Node, MySQL, Redis, OpenSearch, web server','Service grid'],
+    ['Install Node, MySQL, Redis, OpenSearch/Elasticsearch, web server','Service grid'],
     ['Deploy Magento & Node.js applications','Build + CI/CD deploy'],
     ['Migrate & sync databases, files, media','Synchronize + data integrity'],
     ['Configure SSL, virtual hosts, reverse proxy','Nginx / SSL in build + arch'],
@@ -843,6 +889,31 @@
       el('runBtn').disabled=false; running=false;
     });
   }
+
+  // ---------- nav scroll ----------
+  function goSec(btn){
+    var t=document.getElementById(btn.getAttribute('data-to'));
+    if(t) t.scrollIntoView({behavior:'smooth',block:'start'});
+  }
+  (function(){
+    var navBtns=document.querySelectorAll('.secnav button.nb[data-to]');
+    var sections=[];
+    navBtns.forEach(function(b){
+      var t=document.getElementById(b.getAttribute('data-to'));
+      if(t) sections.push({el:t,link:b});
+    });
+    var ticking=false;
+    window.addEventListener('scroll',function(){
+      if(!ticking){requestAnimationFrame(function(){
+        var scrollY=window.scrollY+130;
+        var cur=null;
+        sections.forEach(function(s){if(s.el.offsetTop<=scrollY) cur=s;});
+        navBtns.forEach(function(b){b.classList.remove('act');});
+        if(cur) cur.link.classList.add('act');
+        ticking=false;
+      });ticking=true;}
+    });
+  })();
 
   // ---------- reset ----------
   function resetAll(keepLog){
