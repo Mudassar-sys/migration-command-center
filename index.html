@@ -168,6 +168,13 @@
   .req .r .rt b{display:block;font-size:13.5px}
   .req .r .rt span{color:var(--faint);font-size:12px}
 
+  /* runbook */
+  .rb{list-style:none;margin:0;padding:0}
+  .rb li{position:relative;padding:7px 0 7px 18px;border-bottom:1px dashed var(--line);font-size:13.2px}
+  .rb li:last-child{border-bottom:none}
+  .rb li::before{content:"";position:absolute;left:0;top:14px;width:6px;height:6px;border-radius:50%;background:var(--accent);opacity:.8}
+  .cmd{font-family:var(--mono);font-size:12px;color:#9fe9dd;background:#081019;border:1px solid var(--line);border-radius:7px;padding:2px 7px;display:inline-block;margin-top:3px;word-break:break-word}
+  .when{display:inline-block;font-family:var(--mono);font-size:11px;color:#ffd68a;background:var(--amberb);border:1px solid #5a4620;border-radius:7px;padding:1px 7px;margin-left:8px}
   .note{font-size:12px;color:var(--faint);border-top:1px solid var(--line);margin-top:26px;padding-top:14px}
   .kicker{font-family:var(--display);font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);font-weight:700;margin:30px 0 10px}
   .caserow{display:grid;grid-template-columns:1fr 1fr;gap:16px}
@@ -417,6 +424,101 @@
         <div class="r"><div class="ck">✓</div><div class="rt"><b>Backup &amp; restore steps</b><span>database and media, tested</span></div></div>
         <div class="r"><div class="ck">✓</div><div class="rt"><b>Monitoring dashboards</b><span>New Relic alerts kept connected</span></div></div>
         <div class="r"><div class="ck">✓</div><div class="rt"><b>Deploy &amp; release guide</b><span>how a new release goes out safely</span></div></div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- RUNBOOK -->
+  <div class="kicker">Runbook &middot; the actual plan for your move</div>
+  <div class="grid">
+
+    <div class="card">
+      <h3>Phase 1 &middot; Build the target<span class="when">T minus 7 days</span></h3>
+      <div class="sub">Nothing touches production in this phase.</div>
+      <ul class="rb">
+        <li>Ubuntu LTS, Nginx, PHP-FPM 8.3 with bcmath, intl, soap, sockets, xsl, zip, gd, opcache</li>
+        <li>MySQL 8, Redis 7, OpenSearch 2.x, Node LTS, Composer 2</li>
+        <li>Redis split into three databases for default cache, page cache and sessions</li>
+        <li>OpenSearch heap at half the memory, capped at 31 GB</li>
+        <li>Nginx from the Magento sample config, TLS issued and stapled<br><span class="cmd">certbot certonly --nginx -d your-domain</span></li>
+        <li>Same layout available as a Docker Compose stack if you prefer containers</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <h3>Phase 2 &middot; First copy and live replication<span class="when">T minus 3 days</span></h3>
+      <div class="sub">The new server starts following the old one.</div>
+      <ul class="rb">
+        <li>Consistent dump that also records the binlog position<br><span class="cmd">mysqldump --single-transaction --source-data=2 --routines --triggers</span></li>
+        <li>Restore on the target, then point it at the source and start following<br><span class="cmd">CHANGE REPLICATION SOURCE TO ... ; START REPLICA;</span></li>
+        <li>Media and import folders copied, then re-copied as deltas<br><span class="cmd">rsync -a --delete pub/media var/importexport</span></li>
+        <li>Code deployed from your repo, then compiled for three locales<br><span class="cmd">setup:di:compile &amp; setup:static-content:deploy de_DE en_US it_IT</span></li>
+        <li>Extension licences re-registered for Webkul, Landofcoder and WeltPixel</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <h3>Phase 3 &middot; Validate while production runs<span class="when">T minus 2 days</span></h3>
+      <div class="sub">Tested under the real domain without moving any traffic.</div>
+      <ul class="rb">
+        <li>Local hosts override so the target answers on the production hostname</li>
+        <li>Full reindex and cache warm<br><span class="cmd">bin/magento indexer:reindex &amp; cache:flush</span></li>
+        <li>Stripe in test mode, one charge plus a replayed webhook with signature check</li>
+        <li>Webkul seller login, product upload and a complete order</li>
+        <li>Node API health and one gate open request against test keys</li>
+        <li>Replication confirmed level<br><span class="cmd">SHOW REPLICA STATUS: Seconds_Behind_Source = 0</span></li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <h3>Phase 4 &middot; Cutover<span class="when">under 60 seconds</span></h3>
+      <div class="sub">The only moment customers could feel anything.</div>
+      <ul class="rb">
+        <li>A day earlier the DNS record drops to a 60 second time to live</li>
+        <li>Source set to read only, so no order can be lost mid flight<br><span class="cmd">bin/magento maintenance:enable</span></li>
+        <li>Wait for zero replication lag, then one final media delta</li>
+        <li>Target promoted and opened for writes<br><span class="cmd">STOP REPLICA; SET GLOBAL read_only = OFF;</span></li>
+        <li>Reverse proxy upstream switched to the target, DNS follows</li>
+        <li>Stripe webhook endpoints repointed and signature verified</li>
+        <li>Read only released, checkout smoke test, New Relic watched live</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <h3>Phase 5 &middot; Watch window and rollback<span class="when">48 hours</span></h3>
+      <div class="sub">The bridge stays standing until you are sure.</div>
+      <ul class="rb">
+        <li>Replication reversed, target to source, so the old server stays current</li>
+        <li>Rollback triggers agreed in advance: checkout failures, gate API errors, error rate above the agreed line, or broken replication</li>
+        <li>Rollback is a proxy and DNS change back to the source, under 30 seconds, with no data left behind</li>
+        <li>Nightly backups and a restore rehearsal before the window closes</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <h3>What we need from you<span class="when">software only</span></h3>
+      <div class="sub">Nothing physical, nothing from production customers.</div>
+      <ul class="rb">
+        <li>Repository or branch access for the Magento and Node applications</li>
+        <li>Shell or panel access on the current servers, and DNS zone editing</li>
+        <li>Dump or read replica permission on the database</li>
+        <li>Stripe test keys and the current webhook endpoint list</li>
+        <li>Licence keys for Webkul, Landofcoder and WeltPixel</li>
+        <li>A New Relic invite so monitoring continues without a gap</li>
+      </ul>
+    </div>
+
+    <div class="card span2">
+      <h3>Acceptance tests &middot; how you sign it off</h3>
+      <div class="sub">You approve on evidence, not on our word.</div>
+      <div class="req">
+        <div class="r"><div class="ck">✓</div><div class="rt"><b>A real order completes</b><span>cart to Stripe capture to seller notification</span></div></div>
+        <div class="r"><div class="ck">✓</div><div class="rt"><b>A seller works normally</b><span>login, product upload, order visible</span></div></div>
+        <div class="r"><div class="ck">✓</div><div class="rt"><b>The gate opens</b><span>app request to Node API returns success</span></div></div>
+        <div class="r"><div class="ck">✓</div><div class="rt"><b>Support history intact</b><span>HelpDesk tickets and attachments present</span></div></div>
+        <div class="r"><div class="ck">✓</div><div class="rt"><b>Reporting unbroken</b><span>Superset dashboards load with current data</span></div></div>
+        <div class="r"><div class="ck">✓</div><div class="rt"><b>Backend under 350 ms</b><span>measured in your own New Relic, not ours</span></div></div>
       </div>
     </div>
 
