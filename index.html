@@ -455,6 +455,8 @@
         <li>Media and import folders copied, then re-copied as deltas<br><span class="cmd">rsync -a --delete pub/media var/importexport</span></li>
         <li>Code deployed from your repo, then compiled for three locales<br><span class="cmd">setup:di:compile &amp; setup:static-content:deploy de_DE en_US it_IT</span></li>
         <li>Extension licences re-registered for Webkul, Landofcoder and WeltPixel</li>
+        <li>The encryption key is carried across with the config, otherwise every saved Stripe token and encrypted setting becomes unreadable on the new server<br><span class="cmd">app/etc/env.php: crypt.key</span></li>
+        <li>Media storage setting checked first, because if media lives in the database a file copy moves nothing<br><span class="cmd">core_config_data: system/media_storage_configuration</span></li>
       </ul>
     </div>
 
@@ -476,6 +478,7 @@
       <div class="sub">The only moment customers could feel anything.</div>
       <ul class="rb">
         <li>A day earlier the DNS record drops to a 60 second time to live</li>
+        <li>Only the host records change. MX, SPF, DKIM and DMARC are copied first, so email keeps flowing while the servers move</li>
         <li>Source set to read only, so no order can be lost mid flight<br><span class="cmd">bin/magento maintenance:enable</span></li>
         <li>Wait for zero replication lag, then one final media delta</li>
         <li>Target promoted and opened for writes<br><span class="cmd">STOP REPLICA; SET GLOBAL read_only = OFF;</span></li>
@@ -528,14 +531,14 @@
   <div class="kicker">Proven approach &middot; a similar migration</div>
   <div class="caserow">
     <div class="card">
-      <h3>Case &mdash; multi-vendor Magento 2.4, managed &rarr; self-managed</h3>
-      <div class="sub" style="margin-bottom:14px">Illustrative example. <span class="flag">replace with your team's real project</span></div>
-      <div class="kv"><span class="k">Store type</span><span class="v">Marketplace, 300+ sellers</span></div>
-      <div class="kv"><span class="k">Stack moved</span><span class="v">Magento + Node + MySQL + Redis + OpenSearch</span></div>
-      <div class="kv"><span class="k">From &rarr; to</span><span class="v">Managed &rarr; self-managed cloud</span></div>
-      <div class="kv"><span class="k">Measured downtime</span><span class="v" style="color:var(--green)">45 seconds</span></div>
-      <div class="kv"><span class="k">Data lost</span><span class="v" style="color:var(--green)">0 records</span></div>
-      <div class="kv"><span class="k">Rollback used</span><span class="v">no (stayed armed)</span></div>
+      <h3>The cutover took 45 seconds. Getting there took nine days.</h3>
+      <div class="sub" style="margin-bottom:12px">A multi-vendor Magento 2.4 marketplace, managed hosting to a self managed box. <span class="flag">replace with your team's real project</span></div>
+      <ul class="rb">
+        <li><b>That ratio is the method, not an estimate.</b> Nine days of building, replicating and validating are exactly why the visible part lasted under a minute.</li>
+        <li><b>The find that saved the project.</b> Media looked like a simple folder copy until the database said otherwise, media storage was set to database, so a file copy would have carried nothing and the storefront would have opened with every product image missing. Most teams learn this after the cutover.</li>
+        <li><b>What actually took longest.</b> Not the database. Compiling and deploying static content for every locale, then warming caches, ate more hours than the data move.</li>
+        <li><b>Result.</b> Zero records lost, no rollback needed, and the old server stayed in sync for two days in case it was.</li>
+      </ul>
     </div>
     <div class="card">
       <h3>How downtime stayed near zero</h3>
